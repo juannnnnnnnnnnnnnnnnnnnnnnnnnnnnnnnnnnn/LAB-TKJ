@@ -1,0 +1,296 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TKJ Network Adventure</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: white;
+    text-align: center;
+}
+header {
+    padding: 18px;
+    background: #020617;
+}
+h1 {
+    color: #38bdf8;
+    margin: 5px;
+}
+.info {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    padding: 12px;
+    flex-wrap: wrap;
+}
+.game {
+    position: relative;
+    width: min(92vw, 650px);
+    height: 390px;
+    margin: 10px auto;
+    background:
+      linear-gradient(#164e63 1px, transparent 1px),
+      linear-gradient(90deg, #164e63 1px, transparent 1px),
+      #082f49;
+    background-size: 40px 40px;
+    border: 4px solid #38bdf8;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.player, .item, .enemy {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    user-select: none;
+}
+.player {
+    font-size: 38px;
+    z-index: 2;
+}
+.item {
+    font-size: 28px;
+}
+.enemy {
+    font-size: 34px;
+}
+.controls {
+    margin: 15px auto;
+    display: grid;
+    grid-template-columns: 55px 55px 55px;
+    gap: 7px;
+    justify-content: center;
+}
+.controls button {
+    height: 48px;
+    border: 0;
+    border-radius: 10px;
+    background: #0284c7;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    touch-action: none;
+}
+.controls button:active {
+    background: #0ea5e9;
+}
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #22c55e;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+.instructions {
+    max-width: 600px;
+    margin: 15px auto;
+    padding: 15px;
+    line-height: 1.7;
+    color: #cbd5e1;
+}
+#message {
+    color: #facc15;
+    min-height: 28px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🎮 TKJ NETWORK ADVENTURE</h1>
+    <p>Petualangan Mengumpulkan Komponen Komputer</p>
+</header>
+
+<div class="info">
+    <div>⭐ Skor: <span id="score">0</span></div>
+    <div>❤️ Nyawa: <span id="life">3</span></div>
+    <div>📦 Target: <span id="target">5</span></div>
+</div>
+
+<div class="game" id="game">
+    <div class="player" id="player">🧑‍💻</div>
+    <div class="item" id="item">💾</div>
+    <div class="enemy" id="enemy">🦠</div>
+</div>
+
+<h3 id="message">Kumpulkan 5 komponen komputer!</h3>
+
+<button onclick="startGame()">▶ MULAI / ULANGI GAME</button>
+
+<div class="controls">
+    <div></div>
+    <button id="up">⬆️</button>
+    <div></div>
+
+    <button id="left">⬅️</button>
+    <button id="down">⬇️</button>
+    <button id="right">➡️</button>
+</div>
+
+<div class="instructions">
+    <b>Cara bermain:</b><br>
+    - Gunakan tombol WASD atau tombol panah.<br>
+    - Di HP, gunakan tombol arah di layar.<br>
+    - Ambil komponen 💾 untuk mendapatkan skor.<br>
+    - Hindari virus 🦠 agar nyawa tidak berkurang.<br>
+    - Kumpulkan 5 komponen untuk menang!
+</div>
+
+<script>
+const game = document.getElementById("game");
+const player = document.getElementById("player");
+const item = document.getElementById("item");
+const enemy = document.getElementById("enemy");
+
+let x = 40, y = 50;
+let ix = 200, iy = 150;
+let ex = 400, ey = 250;
+
+let score = 0;
+let life = 3;
+let playing = false;
+let keys = {};
+let lastHit = 0;
+
+function randomPosition() {
+    return {
+        x: 25 + Math.random() * (game.clientWidth - 50),
+        y: 25 + Math.random() * (game.clientHeight - 50)
+    };
+}
+
+function draw() {
+    player.style.left = x + "px";
+    player.style.top = y + "px";
+
+    item.style.left = ix + "px";
+    item.style.top = iy + "px";
+
+    enemy.style.left = ex + "px";
+    enemy.style.top = ey + "px";
+}
+
+function updateInfo() {
+    document.getElementById("score").textContent = score;
+    document.getElementById("life").textContent = life;
+}
+
+function startGame() {
+    x = 40;
+    y = 50;
+    score = 0;
+    life = 3;
+    playing = true;
+    lastHit = 0;
+
+    let a = randomPosition();
+    ix = a.x;
+    iy = a.y;
+
+    let b = randomPosition();
+    ex = b.x;
+    ey = b.y;
+
+    document.getElementById("message").textContent =
+        "Ayo kumpulkan 5 komponen!";
+    updateInfo();
+    draw();
+}
+
+function move(dx, dy) {
+    if (!playing) return;
+
+    x = Math.max(15, Math.min(game.clientWidth - 15, x + dx));
+    y = Math.max(15, Math.min(game.clientHeight - 15, y + dy));
+
+    // Musuh bergerak mendekati pemain
+    let angle = Math.atan2(y - ey, x - ex);
+    ex += Math.cos(angle) * 0.65;
+    ey += Math.sin(angle) * 0.65;
+
+    // Mengambil komponen
+    if (Math.hypot(x - ix, y - iy) < 28) {
+        score++;
+        let p = randomPosition();
+        ix = p.x;
+        iy = p.y;
+
+        document.getElementById("message").textContent =
+            "Mantap! Komponen berhasil dikumpulkan!";
+    }
+
+    // Bertabrakan dengan virus
+    if (Math.hypot(x - ex, y - ey) < 32 &&
+        Date.now() - lastHit > 1200) {
+        life--;
+        lastHit = Date.now();
+
+        document.getElementById("message").textContent =
+            "Awas! Kamu terkena virus!";
+
+        let p = randomPosition();
+        ex = p.x;
+        ey = p.y;
+    }
+
+    updateInfo();
+    draw();
+
+    if (score >= 5) {
+        playing = false;
+        document.getElementById("message").textContent =
+            "🏆 SELAMAT! KAMU MENANG!";
+    }
+
+    if (life <= 0) {
+        playing = false;
+        document.getElementById("message").textContent =
+            "💀 GAME OVER! Coba lagi!";
+    }
+}
+
+// Keyboard
+document.addEventListener("keydown", e => {
+    const k = e.key.toLowerCase();
+    if (["arrowup","arrowdown","arrowleft","arrowright",
+         "w","a","s","d"].includes(k)) {
+        e.preventDefault();
+    }
+
+    if (k === "arrowup" || k === "w") move(0, -12);
+    if (k === "arrowdown" || k === "s") move(0, 12);
+    if (k === "arrowleft" || k === "a") move(-12, 0);
+    if (k === "arrowright" || k === "d") move(12, 0);
+});
+
+// Tombol HP
+function control(id, dx, dy) {
+    const btn = document.getElementById(id);
+
+    btn.addEventListener("pointerdown", e => {
+        e.preventDefault();
+        move(dx, dy);
+    });
+}
+
+control("up", 0, -12);
+control("down", 0, 12);
+control("left", -12, 0);
+control("right", 12, 0);
+
+startGame();
+</script>
+
+</body>
+</html>
